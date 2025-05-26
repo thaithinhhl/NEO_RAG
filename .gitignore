@@ -1,0 +1,45 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+.env
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+
+# Data files
+data/
+*.json
+*.txt
+*.docx
+*.pdf
+*.csv
+*.xlsx
+*.xls
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Local development settings
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+logs/ 

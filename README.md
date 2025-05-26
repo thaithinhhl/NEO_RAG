@@ -1,4 +1,5 @@
 # NEO RAG - Retrieval Augmented Generation System
+![image](https://github.com/user-attachments/assets/aec09554-7f6e-4861-9cd2-7f653883fc93)
 
 ## Overview
 NEO RAG is a Retrieval Augmented Generation (RAG) system that enhances language model responses by retrieving relevant information from a knowledge base. The system is designed to provide accurate and contextually relevant answers by combining the power of language models with efficient information retrieval.

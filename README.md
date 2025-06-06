@@ -76,3 +76,122 @@ See `requirements.txt` for a complete list of dependencies.
 
 ## Contributing
 [To be added based on contribution guidelines]
+
+# NEO_RAG Setup Guide
+
+## Local Development Setup
+
+1. Clone repository:
+```bash
+git clone <repository_url>
+cd NEO_RAG
+```
+
+2. Create and activate virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# or .\venv\Scripts\activate  # Windows
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Start Redis server:
+```bash
+redis-server
+```
+
+3. Run the application:
+```bash
+python gradio_app.py
+```
+
+## Server Deployment
+
+1. SSH into your server:
+```bash
+ssh username@server_ip
+```
+
+2. Clone the repository:
+```bash
+git clone <repository_url>
+cd NEO_RAG
+```
+
+3. Make setup script executable and run:
+```bash
+chmod +x setup_server.sh
+./setup_server.sh
+```
+
+4. Configure environment variables:
+- Edit ~/.bashrc
+- Set appropriate values for:
+  - OPENAI_API_KEY
+  - MODEL_PATH
+  - DATA_PATH
+
+5. Apply changes:
+```bash
+source ~/.bashrc
+```
+
+## Project Structure
+```
+NEO_RAG/
+├── data/           # Data storage
+├── logs/           # Log files
+├── models/         # Model files
+├── venv/           # Virtual environment
+├── requirements.txt
+└── setup_server.sh
+```
+
+## Important Notes
+- Always test changes locally before deploying to server
+- Keep environment variables secure
+- Regular backups of data directory recommended
+- Check logs for any issues after deployment
+
+# Legal Chatbot
+
+A legal chatbot built with Gradio and LangChain.
+
+## Local Development
+
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Start Redis server:
+```bash
+redis-server
+```
+
+3. Run the application:
+```bash
+python gradio_app.py
+```
+
+## Deployment
+
+### Option 1: Temporary Public URL
+Run the app locally and Gradio will generate a public URL valid for 72 hours:
+```bash
+python gradio_app.py
+```
+
+### Option 2: Hugging Face Spaces
+1. Create a new Space on Hugging Face
+2. Choose Gradio as the SDK
+3. Upload the following files:
+   - gradio_app.py
+   - requirements.txt
+   - All files in src/ directory
+4. Configure environment variables if needed
+5. Deploy!

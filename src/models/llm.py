@@ -3,16 +3,19 @@ import sys
 import os
 import time
 from datetime import datetime
+import json
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+from src.utils.chat_history import message_history, get_history
+from src.models.function_calling import process_query
 from src.retrieval.query import retrieve
 
-### Ollama setup
 print('Đang kết nối Mistral-7B...')
 try:
     llm = Ollama(
         model="mistral:7b",  
-        temperature=0.7,
+        temperature=0.1,     # Giảm temperature để output nhất quán hơn
         top_k=10,
         top_p=0.9,
         repeat_penalty=1.1,
@@ -32,9 +35,10 @@ def prompt_template(query, context, n_context=10):
     2. Trả lời đầy đủ, chi tiết, cụ thể, dễ hiểu 
     3. Chỉ sử dụng thông tin từ các nội dung được cung cấp
     4. Nếu không có đủ thông tin để trả lời, hãy nói "Tôi không có đủ thông tin để trả lời câu hỏi này"
-
-    Nội dung pháp luật được trích xuất:
     """
+    
+    prompt += "\nNội dung pháp luật được trích xuất:\n"
+    
     for i, c in enumerate(context[:n_context], 1): 
         if isinstance(c, dict):
             c = c['answer']
@@ -47,21 +51,31 @@ def prompt_template(query, context, n_context=10):
 ### -------------------llm -------------------
 def main():
     query = input('Nhập câu hỏi: ')
+    try:
+        print("\nĐang phân tích câu hỏi...")
+        # Tạo một session_id tạm thời cho CLI
+        temp_session_id = f"cli_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        function_result = process_query(query, temp_session_id)
+        
+        if function_result:
+            print('\nAnswer:')
+            print(function_result)
+            return
+                
+    except Exception as e:
+        print(f"Lỗi khi tra cứu thông tin: {str(e)}")
     
-    ## time 
+    print("\nĐang tìm kiếm thông tin liên quan...")
     retrieval_start = time.time()
     context, scores, retrieval_time, total_tokens = retrieve(query)
     retrieval_end = time.time()
 
-    # print("\nKết quả retrieval:")
-    # print(f"Thời gian tìm kiếm: {retrieval_time:.2f} giây")
-    # print(f"Tổng số tokens: {total_tokens}")
-    # print("\nTop 10 đoạn văn bản liên quan:")
-    # for i, (text, score) in enumerate(zip(context, scores), 1):
-    #     print(f"\n{i}. Score: {score:.4f}")
-    #     print(f"Text: {text}")
+    print("\nĐiểm số các đoạn văn bản:")
+    for i, (c, s) in enumerate(zip(context[:10], scores[:10]), 1):
+        if isinstance(c, dict):
+            c = c['answer']
+        print(f"Đoạn {i}: {s:.4f}")
 
-    # Tạo prompt và gọi model
     prompt = prompt_template(query, context)
     try:
         print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Đang tạo câu trả lời từ Mistral-7B...")
@@ -78,11 +92,9 @@ def main():
         
         total_time = llm_end - retrieval_start
         print(f"\nTổng thời gian xử lý: {total_time:.2f} giây")
-        # print(f"- Thời gian tìm kiếm: {retrieval_time:.2f} giây")
-        # print(f"- Thời gian sinh câu trả lời: {(llm_end - llm_start):.2f} giây")
         
     except Exception as e:
-        print(f'Lỗi khi gọi model: {e}')
+        print(f'Lỗi khi tạo câu trả lời: {e}')
 
 if __name__ == '__main__':
     main()

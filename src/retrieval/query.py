@@ -1,3 +1,12 @@
+import os
+import sys
+
+# Add project root to Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+# Internal imports
+from src.utils.chat_history import query_cache, get_cache
+
 import numpy as np
 from transformers import AutoTokenizer, AutoModel
 import torch

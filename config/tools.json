@@ -1,0 +1,83 @@
+[
+    {
+        "name": "tinh_thoi_gian_thu_viec",
+        "description": "Tính thời gian thử việc tối đa theo từng loại công việc",
+        "user_question": "để tính thời gian thử việc " , 
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "vi_tri_cong_viec": {
+                    "type": "string",
+                    "description": "vị trí công việc",
+                    "enum": ["Kỹ thuật cao", "Quản lý", "Thực tập"]
+                }       
+            },
+            "required": ["vi_tri_cong_viec"]
+        },
+        "context_requirements": ["thử việc","bao nhiêu ngày thử việc", "thời hạn thử việc", "khoảng thời gian thử việc"]
+    },
+    {
+        "name": "nhan_su_cong_ty_NEO",
+        "description": "Hiển thị thông tin nhân sự công ty NEO",
+        "user_question": "để tra cứu thông tin nhân sự của công ty NEO",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "phong_ban": {
+                    "type": "string",
+                    "description": "tên phòng ban"
+                }
+            },
+            "required": ["phong_ban"]
+        },
+        "context_requirements": ["nhân sự", "nhân viên"]
+    },
+    {
+        "name": "dia_chi_cong_ty_NEO",
+        "description": "Hiển thị địa chỉ công ty NEO",
+        "user_question": "để tra cứu địa chỉ công ty NEO",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "xem_dia_chi": {
+                    "type": "boolean",
+                    "description": "xác nhận xem địa chỉ"
+                }
+            },
+            "required": ["xem_dia_chi"]
+        },
+        "context_requirements": ["địa chỉ", "tòa nhà", "văn phòng"]
+    },
+    {
+        "name": "thoi_gian_lam_viec_tai_cong_ty_NEO",
+        "description": "Hiển thị thời gian làm việc tại công ty NEO",
+        "user_question": "để tính thời gian làm việc tại công ty NEO",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "xem_gio_lam": {
+                    "type": "boolean",
+                    "description": "xác nhận xem giờ làm việc"
+                }
+            },
+            "required": ["xem_gio_lam"]
+        },
+        "context_requirements": ["thời gian làm việc", "giờ làm việc", "lịch làm việc"]
+    },
+    {
+        "name": "tinh_ngay_nghi_phep_con_lai_NEO",
+        "description": "tính số ngày nghỉ phép còn lại tại công ty NEO",
+        "user_question": "để tính số ngày nghỉ phép còn lại tại công ty NEO",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "so_ngay_da_nghi": {
+                    "type": "integer",
+                    "description": "số ngày bạn đã nghỉ phép trong năm nay"
+                }
+            },
+            "required": ["so_ngay_da_nghi"]
+        },
+        "context_requirements": ["ngày nghỉ", "phép năm", "số ngày còn lại", "nghỉ phép"]
+    }
+]                                                                         

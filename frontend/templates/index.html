@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEO RAG - Cosmic Legal Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Cosmic Background -->
+    <div class="cosmic-background">
+        <div class="stars-layer"></div>
+        <div class="nebula-layer"></div>
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+
+    <!-- Floating Particles -->
+    <div class="particle-container" id="particleSystem"></div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Header -->
+        <header class="cosmic-header">
+            <div class="logo-container">
+                <div class="logo-glow"></div>
+                <h1 class="cosmic-title">
+                    <span class="title-part">NEO</span>
+                    <span class="title-part highlight">RAG</span>
+                </h1>
+                <p class="subtitle">ChatBot Legal</p>
+            </div>
+        </header>
+
+        <!-- Chat Interface -->
+        <div class="chat-interface">
+            <div class="chat-container">
+                <!-- Messages Area -->
+                <div class="chat-messages" id="chatMessages">
+                    <div class="welcome-card">
+                        <div class="card-glow"></div>
+                        <div class="welcome-content">
+                            <div class="welcome-icon">⚖️</div>
+                            <h3>Chào mừng đến với ChatBot Legal</h3>
+                            <p>Trợ lý pháp lý thông minh với khả năng:</p>
+                            <ul class="feature-list">
+                                <li><span class="feature-icon">💼</span> Tư vấn luật lao động</li>
+                                <li><span class="feature-icon">🏢</span> Thông tin công ty NEO</li>
+                                <li><span class="feature-icon">📋</span> Tính toán quyền lợi</li>
+                                <li><span class="feature-icon">🔍</span> Tra cứu quy định</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typing Indicator -->
+                <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                    <div class="message bot">
+                        <div class="message-bubble">
+                            <div class="typing-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="chat-input">
+                    <div class="input-group">
+                        <div class="input-glow"></div>
+                        <input type="text" 
+                               class="message-input" 
+                               id="messageInput" 
+                               placeholder="Ask NEO RAG anything..."
+                               maxlength="500">
+                        <button class="send-button" id="sendButton">
+                            <span class="button-glow"></span>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="input-hints">
+                        <span class="hint-item">💡 Hỏi về thời gian thử việc</span>
+                        <span class="hint-item">🏢 Thông tin công ty</span>
+                        <span class="hint-item">📅 Tính ngày phép</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot online"></div>
+                <span>AI Assistant Ready</span>
+            </div>
+            <div class="model-info">
+                <span>Powered by NEO Technology</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-text">Initializing...</div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 

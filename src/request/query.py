@@ -17,7 +17,7 @@ from sentence_transformers import CrossEncoder
 
 class Query:
     def __init__(self):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cpu")
         self.tokenizer = AutoTokenizer.from_pretrained("truro7/vn-law-embedding")
         self.model = AutoModel.from_pretrained("truro7/vn-law-embedding")
         self.model.to(self.device)

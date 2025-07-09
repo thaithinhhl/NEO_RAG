@@ -1,6 +1,5 @@
 import os
 import sys
-import uuid
 import json
 import shutil
 from datetime import datetime
@@ -8,14 +7,13 @@ from werkzeug.utils import secure_filename
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, request, jsonify, render_template, send_from_directory, session
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 
 # Import main pipeline từ main.py
 from main import initialize_pipeline
 
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static')
-app.secret_key = 'neo_rag_secret_key'  # Thêm secret key cho session
 CORS(app)
 
 # Configuration cho file upload
@@ -79,25 +77,17 @@ def get_pipeline():
         pipeline = initialize_pipeline()
     return pipeline
 
-def get_or_create_user_id():
-    """Lấy user_id từ session hoặc tạo mới nếu chưa có"""
-    if 'user_id' not in session:
-        session['user_id'] = str(uuid.uuid4())
-    return session['user_id']
-
 @app.route('/')
 def index():
-    """Hiển thị trang chủ và tạo user_id mới nếu chưa có"""
-    user_id = get_or_create_user_id()
+    """Hiển thị trang chủ"""
     try:
-        return render_template('index.html', user_id=user_id)
+        return render_template('index.html')
     except:
         return f"""
         <div style="text-align: center; padding: 50px; font-family: Arial;">
             <h1>🏛️ NEO RAG API Server</h1>
             <h3>Hệ thống Q&A Pháp luật Việt Nam</h3>
             <p>Frontend templates chưa được cấu hình.</p>
-            <p>User ID của bạn: {user_id}</p>
             <hr>
             <h4>📋 API Endpoints:</h4>
             <ul style="list-style: none;">
@@ -119,8 +109,6 @@ def chat():
             return jsonify({'error': 'Invalid JSON data'}), 400
             
         message = data.get('message')
-        # Lấy user_id từ session thay vì tạo mới
-        user_id = get_or_create_user_id()
         
         # Validation
         if not message:
@@ -129,14 +117,14 @@ def chat():
         if not isinstance(message, str):
             return jsonify({'error': 'Message must be a string'}), 400
             
-        print(f"Processing chat request - User: {user_id}, Message: {message[:100]}...")
+        print(f"Processing chat request - Message: {message[:100]}...")
         
         # Delegate to main pipeline
         current_pipeline = get_pipeline()
         if not current_pipeline:
             return jsonify({'error': 'System not initialized properly'}), 500
             
-        response, source = current_pipeline.process_chain(message, user_id)
+        response, source = current_pipeline.process_chain(message)
         
         if not response:
             return jsonify({'error': 'No response generated'}), 500
@@ -146,7 +134,6 @@ def chat():
         return jsonify({
             'response': response,
             'source': source,
-            'user_id': user_id,
             'timestamp': datetime.now().isoformat()
         })
         

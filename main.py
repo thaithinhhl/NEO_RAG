@@ -8,32 +8,21 @@ from datetime import datetime
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.models.function_calling import FunctionCalling
-from src.models.retrieval import LLMManager   
-from src.utils.chat_history import ChatHistory
-    
+from src.models.retrieval import LLMManager       
+
 class RAG: 
     def __init__(self):
-        self.function_calling = FunctionCalling() # gọi hàm
-        self.retrieval = LLMManager() # truy vấn 
-        self.chat_history = ChatHistory(
-            sentinel_host='10.252.10.248',
-            sentinel_port=26379,
-            service_name='mymaster',
-            password='mymasanpass#12x',
-            db=0
-        )
-    def request_user(self, query, user_id="default"):
+        self.function_calling = FunctionCalling() 
+        self.retrieval = LLMManager() 
+
+    def request_user(self, query: str, user_id: str = "default") -> Tuple[str, str]:
         if not query or not isinstance(query, str):
             return "Câu hỏi không hợp lệ", "error"
             
         try:
             # Xử lý function calling
-            function_result = self.function_calling.process_query(query, user_id)
+            function_result = self.function_calling.process_query(query)
             if function_result:
-                try:
-                    self.chat_history.save_chat(user_id, query, function_result)
-                except Exception as e:
-                    print(f"Lỗi lưu chat history (function): {str(e)}")
                 return function_result, "function_calling"
 
             # Xử lý retrieval
@@ -46,23 +35,6 @@ class RAG:
                     return "Xin lỗi, tôi không thể xử lý câu hỏi này lúc này", "error"
 
                 print(f"Đã nhận kết quả retrieval: {retrieval_result[:100]}...")
-                
-                try:
-                    contexts, scores, retrieval_time, total_tokens = self.retrieval.query_processor.retrieve(query)
-                    self.chat_history.save_chat(
-                        user_id=user_id,
-                        query=query,
-                        response=retrieval_result,
-                        context={"contexts": contexts}
-                    )
-                except Exception as e:
-                    print(f"Lỗi xử lý context: {str(e)}")
-                    self.chat_history.save_chat(
-                        user_id=user_id,
-                        query=query,
-                        response=retrieval_resultx
-                    )
-                
                 return retrieval_result, "retrieval_llm"
                 
             except Exception as e:
@@ -86,8 +58,8 @@ def get_rag():
 def initialize_pipeline():
     rag = get_rag()
     
-    def process_chain(query: str, user_id: str = "default") -> Tuple[str, str]:
-        response, source = rag.request_user(query, user_id)
+    def process_chain(query: str) -> Tuple[str, str]:
+        response, source = rag.request_user(query)
         return response, source
     
     rag.process_chain = process_chain

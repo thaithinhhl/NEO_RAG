@@ -7,14 +7,13 @@ from datetime import datetime
 import os
 import sys
 import requests
-import asyncio
-import aiohttp
-from urllib.parse import urljoin
+import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+from src.utils.chat_history import ChatHistory
 
 class FunctionCalling:
-    def __init__(self, tools_config_path: str = "config/tools.json"):
+    def __init__(self, tools_config_path: str = "config/tools.json", chat_history: Optional[ChatHistory] = None):
         self.tools = json.load(open(tools_config_path, "r", encoding="utf-8"))
         self.llm = OllamaLLM(
             model="llama3.1:8b",  
@@ -25,11 +24,11 @@ class FunctionCalling:
             num_ctx=4096,
             stop=['Question:', 'Câu hỏi:', 'Human:', 'Assistant:', '```']
         )
+        self.chat_history = chat_history
         
     def tinh_thoi_gian_thu_viec(self, vi_tri_cong_viec: str) -> str:
         """Tính thời gian thử việc theo vị trí công việc"""
         periods = {
-            "Kỹ thuật cao": "2 tháng", 
             "Quản lý": "60 ngày", 
             "Thực tập": "3 đến 6 tháng"
         }
@@ -146,22 +145,18 @@ class FunctionCalling:
                 break
         return param_name
 
-    def create_prompt(self, query: str) -> str:
+    def create_prompt(self, query: str, user_id: str = None) -> str:
         """Tạo prompt cho LLM"""
-        return f'''Bạn là một luật sư chuyên nghiệp tại Việt Nam, hỗ trợ tính toán, phân tích và tra cứu quy định lao động.
-
-NHIỆM VỤ CỦA BẠN:   
-
-Hãy trả lời câu hỏi hiện tại dựa trên các thông tin đã cung cấp. 
-Phân tích câu hỏi và trả về chính xác JSON theo định dạng sau, không thêm bất kỳ text nào khác:
-
+        return f'''<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+Tools: function_calling
+NHIỆM VỤ CỦA BẠN:
+Phân tích câu hỏi và trả về JSON theo định dạng sau:
 {{
     "function": "tên_hàm",
     "arguments": {{
         Nếu có giá trị -> điền giá trị
         Nếu không có giá trị -> điền null cho string, null cho number
     }},
-
     "missing_info": ["danh_sách_tham_số_thiếu"]
 }}
 
@@ -178,37 +173,27 @@ LOGIC XỬ LÝ:
 - Nếu không xác định được hàm hoặc câu hỏi không liên quan đến tính toán/tra cứu: trả về {{"function": "Not_call_function_calling", "arguments": {{}}, "missing_info": []}}
 
 CÁC HÀM CÓ THỂ GỌI:
-{json.dumps(self.tools,  ensure_ascii=False, indent=2)}
-
-Câu hỏi: {query}
-
-TRẢ VỀ JSON:'''
+{json.dumps(self.tools, ensure_ascii=False, indent=2)}
+{query}
+<|eot_id|><|start_header_id|>assistant<|end_header_id|>'''
 
     def process_query(self, query: str, user_id: str = None) -> Optional[str]:
-        """Xử lý câu hỏi và thực hiện function calling"""
         try:
-            if not user_id:
-                user_id = str(uuid.uuid4())
-                
-            prompt = self.create_prompt(query)
-
-            print("LLM PROMPT:", prompt)
+            time_start = time.time()
+            prompt = self.create_prompt(query, user_id)
             response = self.llm.invoke(prompt)
-            print("LLM RESPONSE:", response)
-
-            result = self.extract_json_from_response(response)
-            if not result:
+            parsed = self.extract_json_from_response(response)
+            if not parsed:
                 error_msg = "Lỗi: Không thể phân tích phản hồi từ LLM. Vui lòng thử lại."
                 return error_msg
-
-            func_name = result.get("function")
-            arguments = result.get("arguments", {})
-            missing_params = result.get("missing_info", [])
+            func_name = parsed.get("function")
+            arguments = parsed.get("arguments", {})
+            missing_params = parsed.get("missing_info", [])
 
             if func_name == 'Not_call_function_calling':
                 return None
 
-#-----------------Đủ thông tin để gọi hàm-----------------
+            # enought info to call function
             if not missing_params:
                 func_name_result = self.execute_function(func_name, arguments)
                 if func_name_result:
@@ -216,10 +201,9 @@ TRẢ VỀ JSON:'''
                 else:
                     return "Lỗi: Không thể thực hiện hàm."
                 
- #-----------------Không đủ thông tin để gọi hàm-----------------
+            # not enought info to call function
             purpose = self.get_purpose(func_name)
-            
-            # Chuyển đổi required -> user-friendly 
+            # convert required -> user-friendly 
             context_friendly = []
             for param in missing_params:
                 friendly_name = self.get_user_friendly_name(func_name, param)
@@ -235,4 +219,6 @@ TRẢ VỀ JSON:'''
             
         except Exception as e:
             return f"Lỗi: Không thể xử lý câu hỏi. Vui lòng thử lại. Chi tiết: {str(e)}"
-
+        finally:
+            time_end = time.time()
+            print(f"Time taken: {time_end - time_start} seconds")

@@ -10,10 +10,9 @@ import requests
 import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from src.utils.chat_history import ChatHistory
 
 class FunctionCalling:
-    def __init__(self, tools_config_path: str = "config/tools.json", chat_history: Optional[ChatHistory] = None):
+    def __init__(self, tools_config_path: str = "config/tools.json"):
         self.tools = json.load(open(tools_config_path, "r", encoding="utf-8"))
         self.llm = OllamaLLM(
             model="llama3.1:8b",  
@@ -22,9 +21,8 @@ class FunctionCalling:
             top_p=0.9,
             repeat_penalty=1.1,
             num_ctx=4096,
-            stop=['Question:', 'Câu hỏi:', 'Human:', 'Assistant:', '```']
+            stop=['Question:', 'Câu hỏi:', 'Human:', 'Assistant:', '```'],
         )
-        self.chat_history = chat_history
         
     def tinh_thoi_gian_thu_viec(self, vi_tri_cong_viec: str) -> str:
         """Tính thời gian thử việc theo vị trí công việc"""
@@ -174,15 +172,21 @@ LOGIC XỬ LÝ:
 
 CÁC HÀM CÓ THỂ GỌI:
 {json.dumps(self.tools, ensure_ascii=False, indent=2)}
+
+<|eot_id|><|start_header_id|>user<|end_header_id|>
+
 {query}
 <|eot_id|><|start_header_id|>assistant<|end_header_id|>'''
 
     def process_query(self, query: str, user_id: str = None) -> Optional[str]:
         try:
+            if not user_id:
+                user_id = str(uuid.uuid4())
             time_start = time.time()
             prompt = self.create_prompt(query, user_id)
             response = self.llm.invoke(prompt)
             parsed = self.extract_json_from_response(response)
+            print("Parsed:", parsed)
             if not parsed:
                 error_msg = "Lỗi: Không thể phân tích phản hồi từ LLM. Vui lòng thử lại."
                 return error_msg

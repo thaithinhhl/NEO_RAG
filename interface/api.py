@@ -124,7 +124,7 @@ def chat():
         if not current_pipeline:
             return jsonify({'error': 'System not initialized properly'}), 500
             
-        response, source = current_pipeline.process_chain(message)
+        response, source = current_pipeline.request_user(message)
         
         if not response:
             return jsonify({'error': 'No response generated'}), 500

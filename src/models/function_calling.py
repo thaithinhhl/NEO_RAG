@@ -13,7 +13,7 @@ class FunctionCalling:
     def __init__(self, tools_config_path: str = "config/tools.json"):
         self.tools = json.load(open(tools_config_path, "r", encoding="utf-8"))
         self.llm = OllamaLLM(
-            model="qwen3:0.6",
+            model="qwen3:0.6b",
             format="json",
             temperature=0.0,      
             top_k=10,
@@ -90,7 +90,21 @@ class FunctionCalling:
 
     def extract_json_from_response(self, response: str) -> Optional[Dict[str, Any]]:
         try:
-            return json.loads(response)
+            try:
+                return json.loads(response)
+            except:
+                pass
+            start = response.rfind('{')
+            end = response.rfind('}')
+            if start != -1 and end != -1 and start < end:
+                try:
+                    json_str = response[start:end+1]
+                    return json.loads(json_str)
+                except:
+                    pass
+                    
+            print("\nKhông tìm thấy JSON hợp lệ trong response:", response)
+            return None
         except Exception as e:
             print(f"Lỗi khi trích xuất JSON: {str(e)}")
             return None
@@ -108,36 +122,36 @@ class FunctionCalling:
         return param_name
 
     def create_prompt(self, query: str) -> str:
-        tools_json_str = json.dumps(self.tools, ensure_ascii=False, indent=2)
+        tools_json_str = json.dumps(self.tools, ensure_ascii=False)
         prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-Bạn là một trợ lý chuyên về phân tích câu hỏi để gọi hàm. Dựa vào câu hỏi của người dùng và danh sách các hàm có sẵn, hãy trả về MỘT đối tượng JSON duy nhất theo các quy tắc sau.
+            Bạn là một trợ lý chuyên về phân tích câu hỏi để gọi hàm. Dựa vào câu hỏi của người dùng và danh sách các hàm có sẵn, hãy trả về MỘT đối tượng JSON duy nhất theo các quy tắc sau.
 
-QUY TẮC:
-- Chỉ trả về JSON, không thêm bất kỳ lời giải thích hay markdown nào.
-- Nếu đủ thông tin để gọi hàm: điền "function" và "arguments", để "missing_info": [].
-- Nếu thiếu thông tin: điền "function", điền "arguments" với giá trị null cho các tham số bị thiếu, và điền "missing_info" với danh sách tên các tham số thiếu.
-- Nếu câu hỏi không liên quan đến bất kỳ hàm nào: trả về {{"function": "Not_call_function_calling", "arguments": {{}}, "missing_info": []}}.
+            QUY TẮC:
+            - Chỉ trả về JSON, không thêm bất kỳ lời giải thích hay markdown nào.
+            - Nếu đủ thông tin để gọi hàm: điền "function" và "arguments", để "missing_info": [].
+            - Nếu thiếu thông tin: điền "function", điền "arguments" với giá trị null cho các tham số bị thiếu, và điền "missing_info" với danh sách tên các tham số thiếu.
+            - Nếu câu hỏi không liên quan đến bất kỳ hàm nào: trả về {{"function": "Not_call_function_calling", "arguments": {{}}, "missing_info": []}}.
 
-CÁC HÀM CÓ THỂ GỌI:
-{tools_json_str}
+            CÁC HÀM CÓ THỂ GỌI 
+            {tools_json_str}
 
-EXAMPLES:
-User: "thời gian làm việc của công ty là gì"
-Assistant: {{"function": "thoi_gian_lam_viec_tai_cong_ty_NEO", "arguments": {{"xem_gio_lam": true}}, "missing_info": []}}
+            EXAMPLES:
+            User: "thời gian làm việc của công ty là gì"
+            Assistant: {{"function": "thoi_gian_lam_viec_tai_cong_ty_NEO", "arguments": {{"xem_gio_lam": true}}, "missing_info": []}}
 
-User: "tôi đã nghỉ 5 ngày, còn bao nhiêu ngày phép?"
-Assistant: {{"function": "tinh_ngay_nghi_phep_con_lai_NEO", "arguments": {{"so_ngay_da_nghi": 5}}, "missing_info": []}}
+            User: "tôi đã nghỉ 5 ngày, còn bao nhiêu ngày phép?"
+            Assistant: {{"function": "tinh_ngay_nghi_phep_con_lai_NEO", "arguments": {{"so_ngay_da_nghi": 5}}, "missing_info": []}}
 
-User: "cho tôi hỏi về nhân sự"
-Assistant: {{"function": "nhan_su_cong_ty_NEO", "arguments": {{"phong_ban": null}}, "missing_info": ["phong_ban"]}}
-<|eot_id|><|start_header_id|>user<|end_header_id|>
+            User: "cho tôi hỏi về nhân sự"
+            Assistant: {{"function": "nhan_su_cong_ty_NEO", "arguments": {{"phong_ban": null}}, "missing_info": ["phong_ban"]}}
+            <|eot_id|><|start_header_id|>user<|end_header_id|>
 
-{query}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
+            {query}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
         return prompt
 
     def process_query(self, query: str) -> Optional[str]:
-        try:
+        try:    
             time_start = time.time()
             prompt = self.create_prompt(query)
             response = self.llm.invoke(prompt)

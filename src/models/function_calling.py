@@ -1,11 +1,8 @@
 from typing import Optional, Dict, Any
 import json
 from langchain_ollama import OllamaLLM
-import re
-from datetime import datetime
 import os
 import sys
-import requests
 import time
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
@@ -15,11 +12,11 @@ class FunctionCalling:
         self.llm = OllamaLLM(
             model="qwen3:0.6b",
             format="json",
-            temperature=0.0,      
-            top_k=10,
-            top_p=0.9,
-            repeat_penalty=1.1,
-            num_ctx=2048,
+            temperature=0.1,      
+            top_k=5,             
+            top_p=0.8,           
+            repeat_penalty=1.05,  
+            num_ctx=2048,        
             stop=['Question:', 'Câu hỏi:', 'Human:', 'Assistant:', '```'],
         )   
         
@@ -125,27 +122,23 @@ class FunctionCalling:
         tools_json_str = json.dumps(self.tools, ensure_ascii=False)
         prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-            Bạn là một trợ lý chuyên về phân tích câu hỏi để gọi hàm. Dựa vào câu hỏi của người dùng và danh sách các hàm có sẵn, hãy trả về MỘT đối tượng JSON duy nhất theo các quy tắc sau.
+Bạn là trợ lý phân tích câu hỏi để gọi hàm. Trả về JSON duy nhất theo quy tắc:
 
-            QUY TẮC:
-            - Chỉ trả về JSON, không thêm bất kỳ lời giải thích hay markdown nào.
-            - Nếu đủ thông tin để gọi hàm: điền "function" và "arguments", để "missing_info": [].
-            - Nếu thiếu thông tin: điền "function", điền "arguments" với giá trị null cho các tham số bị thiếu, và điền "missing_info" với danh sách tên các tham số thiếu.
-            - Nếu câu hỏi không liên quan đến bất kỳ hàm nào: trả về {{"function": "Not_call_function_calling", "arguments": {{}}, "missing_info": []}}.
+QUY TẮC:
+- Chỉ trả về JSON, không thêm gì khác
+- Đủ thông tin: điền "function" và "arguments", để "missing_info": []
+- Thiếu thông tin: điền "function", "arguments" với null cho tham số thiếu, điền "missing_info"
+- Không liên quan: {{"function": "Not_call_function_calling", "arguments": {{}}, "missing_info": []}}
 
-            CÁC HÀM CÓ THỂ GỌI 
-            {tools_json_str}
+HÀM CÓ SẴN: {tools_json_str}
 
-            EXAMPLES:
-            User: "thời gian làm việc của công ty là gì"
-            Assistant: {{"function": "thoi_gian_lam_viec_tai_cong_ty_NEO", "arguments": {{"xem_gio_lam": true}}, "missing_info": []}}
+VÍ DỤ:
+User: "thời gian làm việc của công ty là gì"
+Assistant: {{"function": "thoi_gian_lam_viec_tai_cong_ty_NEO", "arguments": {{"xem_gio_lam": true}}, "missing_info": []}}
 
-            User: "tôi đã nghỉ 5 ngày, còn bao nhiêu ngày phép?"
-            Assistant: {{"function": "tinh_ngay_nghi_phep_con_lai_NEO", "arguments": {{"so_ngay_da_nghi": 5}}, "missing_info": []}}
-
-            User: "cho tôi hỏi về nhân sự"
-            Assistant: {{"function": "nhan_su_cong_ty_NEO", "arguments": {{"phong_ban": null}}, "missing_info": ["phong_ban"]}}
-            <|eot_id|><|start_header_id|>user<|end_header_id|>
+User: "cho tôi hỏi về nhân sự"  
+Assistant: {{"function": "nhan_su_cong_ty_NEO", "arguments": {{"phong_ban": null}}, "missing_info": ["phong_ban"]}}
+<|eot_id|><|start_header_id|>user<|end_header_id|>
 
             {query}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
         return prompt
